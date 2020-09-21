@@ -11,15 +11,19 @@ BUILD=$(PROGS)
 ifneq ($(DYNAMIC),yes)
 LDFLAGS += --static
 endif
-LDLIBS += -L../libcap -lcap
+
+DEPS=../libcap/libcap.a ../libcap/libpsx.a
 
 all: $(BUILD)
 
-$(BUILD): %: %.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+$(DEPS):
+	make -C ../libcap all
+
+$(BUILD): %: %.o $(DEPS)
+	$(CC) $(CFLAGS) -o $@ $< $(LIBCAPLIB) $(LDFLAGS)
 
 %.o: %.c $(INCS)
-	$(CC) $(IPATH) $(CFLAGS) -c $< -o $@
+	$(CC) $(IPATH) $(CAPSH_SHELL) $(CFLAGS) -c $< -o $@
 
 install: all
 	mkdir -p -m 0755 $(FAKEROOT)$(SBINDIR)
@@ -30,6 +34,11 @@ ifeq ($(RAISE_SETFCAP),yes)
 	$(FAKEROOT)$(SBINDIR)/setcap cap_setfcap=i $(FAKEROOT)$(SBINDIR)/setcap
 endif
 
+test: $(PROGS)
+
+sudotest: test
+	sudo ./quicktest.sh
+
 clean:
 	$(LOCALCLEAN)
-	rm -f *.o $(BUILD) tcapsh ping hack.sh
+	rm -f *.o $(BUILD) tcapsh ping hack.sh compare-cap
