@@ -26,16 +26,8 @@ extern "C" {
 #include <pthread.h>
 
 /*
- * This function is actually provided by the linker trick:
- *
- *   gcc ... -lpsx -lpthread -Wl,-wrap,pthread_create
- */
-int __real_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-			  void *(*start_routine) (void *), void *arg);
-
-/*
  * psx_syscall performs the specified syscall on all psx registered
- * threads. The mecanism by which this occurs is much less efficient
+ * threads. The mechanism by which this occurs is much less efficient
  * than a standard system call on Linux, so it should only be used
  * when POSIX semantics are required to change process relevant
  * security state.

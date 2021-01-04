@@ -29,7 +29,7 @@
 #include <sys/syscall.h>
 
 /*
- * psx_load_syscalls() is weakly defined so we can have it overriden
+ * psx_load_syscalls() is weakly defined so we can have it overridden
  * by libpsx if it is linked. Specifically, when libcap calls
  * psx_load_sycalls it will override their defaut values. As can be
  * seen here this present function is a no-op. However, if libpsx is
@@ -78,8 +78,6 @@ static struct psx_tracker_s {
     pthread_mutex_t state_mu;
     pthread_cond_t cond; /* this is only used to wait on 'state' changes */
     psx_tracker_state_t state;
-    int (*creator)(pthread_t *thread, const pthread_attr_t *attr,
-		   void *(*start_routine) (void *), void *arg);
     int initialized;
     int psx_sig;
 
@@ -170,6 +168,12 @@ int __wrap_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 			  void *(*start_routine) (void *), void *arg);
 
 /*
+ * psx requires this function to be provided by the linkage wrapping.
+ */
+extern int __real_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+				 void *(*start_routine) (void *), void *arg);
+
+/*
  * psx_syscall_start initializes the subsystem including initializing
  * the mutex.
  */
@@ -177,8 +181,6 @@ static void psx_syscall_start(void) {
     pthread_mutex_init(&psx_tracker.state_mu, NULL);
     pthread_cond_init(&psx_tracker.cond, NULL);
     pthread_key_create(&psx_action_key, NULL);
-    psx_tracker.creator = (pthread_create == __wrap_pthread_create ?
-			   __real_pthread_create : pthread_create);
     pthread_atfork(_psx_prepare_fork, _psx_fork_completed, _psx_forked_child);
 
     /*
@@ -272,7 +274,7 @@ static void _psx_forked_child(void) {
      * The only way we can get here is if state is _PSX_INFORK and was
      * previously _PSX_IDLE. However, none of the registered threads
      * exist in this newly minted child process, so we have to reset
-     * the tracking structure to avoid any confusion. We also skuttle
+     * the tracking structure to avoid any confusion. We also scuttle
      * any chance of the PSX API working on more than one thread in
      * the child by leaving the state as _PSX_INFORK. We do support
      * all psx_syscall()s by reverting to them being direct in the
@@ -343,7 +345,7 @@ static void _psx_exiting(void *node) {
 }
 
 /*
- * _psx_start_fn is a trampolene for the intended start function, it
+ * _psx_start_fn is a trampoline for the intended start function, it
  * is called blocked (_PSX_CREATE), but releases the block before
  * calling starter->fn. Before releasing the block, the TLS specific
  * attributes are initialized for use by the interrupt handler under
@@ -404,7 +406,7 @@ int __wrap_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
      */
     pthread_sigmask(SIG_BLOCK, &sigbit, NULL);
 
-    int ret = psx_tracker.creator(thread, attr, _psx_start_fn, starter);
+    int ret = __real_pthread_create(thread, attr, _psx_start_fn, starter);
     if (ret == -1) {
 	psx_new_state(_PSX_CREATE, _PSX_IDLE);
 	memset(starter, 0, sizeof(*starter));
