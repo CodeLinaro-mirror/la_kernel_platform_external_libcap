@@ -337,6 +337,17 @@ struct cap_launch_s {
 #define good_cap_iab_t(x)     (CAP_IAB_MAGIC == magic_of(x))
 #define good_cap_launch_t(x)  (CAP_LAUNCH_MAGIC == magic_of(x))
 
+/* Older uClibc-ng environments lack the static_assert macro */
+#if !defined(__cplusplus) && !defined(static_assert)
+    #if defined(__UCLIBC__)
+        /* Check if we are on uClibc-ng < 1.0.42 */
+        #if (__UCLIBC_MAJOR__ < 1) || \
+            (__UCLIBC_MAJOR__ == 1 && __UCLIBC_MINOR__ == 0 && __UCLIBC_SUBLEVEL__ < 42)
+            #define static_assert _Static_assert
+        #endif
+    #endif
+#endif
+
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
 #define libcap_static_assert(cond, text) \
     static_assert(cond, #text)
