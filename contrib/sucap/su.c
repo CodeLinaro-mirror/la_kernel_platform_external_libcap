@@ -68,7 +68,7 @@
 extern char **environ;
 static pam_handle_t *pamh = NULL;
 
-static int wait_for_child_caught=0;
+static volatile sig_atomic_t wait_for_child_caught=0;
 static int need_job_control=0;
 static int is_terminal = 0;
 static struct termios stored_mode;        /* initial terminal mode settings */
