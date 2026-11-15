@@ -1,3 +1,4 @@
+//go:build !go1.10
 // +build !go1.10
 
 package cap
@@ -19,8 +20,8 @@ import "syscall"
 // to fail with an error: cap.ErrNoLaunch. If this value is false you
 // have two choices with respect to the Launch functionality:
 //
-//   1) don't use cap.(*Launcher).Launch()
-//   2) upgrade your Go toolchain to 1.10+ (ie., do this one).
+//  1. don't use cap.(*Launcher).Launch()
+//  2. upgrade your Go toolchain to 1.10+ (ie., do this one).
 //
 // [Go bug 20395]: https://github.com/golang/go/issues/20395
 // [Go bug 20458]: https://github.com/golang/go/issues/20458

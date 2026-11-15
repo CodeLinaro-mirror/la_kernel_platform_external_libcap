@@ -1,3 +1,4 @@
+//go:build go1.10
 // +build go1.10
 
 package cap
@@ -19,8 +20,8 @@ import "syscall"
 // to fail with an error: cap.ErrNoLaunch. If this value is false you
 // have two choices with respect to the Launch functionality:
 //
-//   1) don't use cap.(*Launcher).Launch()
-//   2) upgrade your Go toolchain to 1.10+ (ie., do this one).
+//  1. don't use cap.(*Launcher).Launch()
+//  2. upgrade your Go toolchain to 1.10+ (ie., do this one).
 //
 // [Go bug 20395]: https://github.com/golang/go/issues/20395
 // [Go bug 20458]: https://github.com/golang/go/issues/20458
@@ -34,11 +35,9 @@ func validatePA(pa *syscall.ProcAttr, chroot string) (bool, error) {
 		if chroot == "" {
 			return false, nil
 		}
-		s = &syscall.SysProcAttr{
-			Chroot: chroot,
-		}
+		s = &syscall.SysProcAttr{}
 		pa.Sys = s
-	} else if s.Chroot != "" {
+	} else if s.Chroot != "" && s.Chroot != chroot {
 		return false, ErrAmbiguousChroot
 	}
 	if s.Credential != nil {
@@ -47,5 +46,6 @@ func validatePA(pa *syscall.ProcAttr, chroot string) (bool, error) {
 	if len(s.AmbientCaps) != 0 {
 		return false, ErrAmbiguousAmbient
 	}
-	return s != nil && s.Chroot != "", nil
+	s.Chroot = chroot
+	return chroot != "", nil
 }
