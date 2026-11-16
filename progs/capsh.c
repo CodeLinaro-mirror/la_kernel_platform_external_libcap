@@ -495,6 +495,8 @@ static void describe(cap_value_t cap) {
     }
 }
 
+extern char **environ;
+
 __attribute__ ((noreturn))
 static void do_launch(char *args[], char *envp[])
 {
@@ -1010,9 +1012,9 @@ int main(int argc, char *argv[], char *envp[])
 	    argv[argc] = NULL;
 	    /* Two ways to chain load - use cap_launch() or execve() */
 	    if (launch) {
-		do_launch(argv+i, envp);
+		do_launch(argv+i, environ);
 	    }
-	    execve(argv[i], argv+i, envp);
+	    execve(argv[i], argv+i, environ);
 	    fprintf(stderr, "execve '%s' failed!\n", argv[i]);
 	    free(argv[i]);
 	    exit(1);
