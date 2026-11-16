@@ -1056,7 +1056,7 @@ defer:
     my_errno = errno;
     for (;;) {
 	int n = write(fd, &my_errno, sizeof(my_errno));
-	if (n < 0 && errno == EAGAIN) {
+	if (n < 0 && errno == EINTR) {
 	    continue;
 	}
 	break;
@@ -1129,7 +1129,7 @@ pid_t cap_launch(cap_launch_t attr, void *detail) {
 	if (n == 0) {
 	    goto defer;
 	}
-	if (n < 0 && errno == EAGAIN) {
+	if (n < 0 && errno == EINTR) {
 	    continue;
 	}
 	waitpid(child, &ignored, 0);
