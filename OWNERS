@@ -1,2 +1,1 @@
-jorgelo@google.com
-include platform/system/core:/janitors/OWNERS
+include platform/system/core:main:/janitors/OWNERS #{LAST_RESORT_SUGGESTION}
