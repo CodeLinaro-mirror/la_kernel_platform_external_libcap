@@ -104,13 +104,7 @@ static int _libcap_wprctl3(struct syscaller_s *sc,
 			   long int pr_cmd, long int arg1, long int arg2)
 {
     if (_libcap_overrode_syscalls) {
-	int result;
-	result = sc->three(SYS_prctl, pr_cmd, arg1, arg2);
-	if (result >= 0) {
-	    return result;
-	}
-	errno = -result;
-	return -1;
+	return sc->three(SYS_prctl, pr_cmd, arg1, arg2);
     }
     return prctl(pr_cmd, arg1, arg2, 0, 0, 0);
 }
@@ -120,13 +114,7 @@ static int _libcap_wprctl6(struct syscaller_s *sc,
 			   long int arg3, long int arg4, long int arg5)
 {
     if (_libcap_overrode_syscalls) {
-	int result;
-	result = sc->six(SYS_prctl, pr_cmd, arg1, arg2, arg3, arg4, arg5);
-	if (result >= 0) {
-	    return result;
-	}
-	errno = -result;
-	return -1;
+	return sc->six(SYS_prctl, pr_cmd, arg1, arg2, arg3, arg4, arg5);
     }
     return prctl(pr_cmd, arg1, arg2, arg3, arg4, arg5);
 }
@@ -270,14 +258,8 @@ int cap_drop_bound(cap_value_t cap) {
 
 int cap_get_ambient(cap_value_t cap)
 {
-    int result;
-    result = prctl(PR_CAP_AMBIENT, pr_arg(PR_CAP_AMBIENT_IS_SET),
-		   pr_arg(cap), pr_arg(0), pr_arg(0));
-    if (result < 0) {
-	errno = -result;
-	return -1;
-    }
-    return result;
+    return prctl(PR_CAP_AMBIENT, pr_arg(PR_CAP_AMBIENT_IS_SET),
+		 pr_arg(cap), pr_arg(0), pr_arg(0));
 }
 
 static int _cap_set_ambient(struct syscaller_s *sc,
@@ -315,7 +297,7 @@ static int _cap_reset_ambient(struct syscaller_s *sc)
 
     for (c = 0; !result; c++) {
 	result = cap_get_ambient(c);
-	if (result == -1) {
+	if (result < 0) {
 	    errno = olderrno;
 	    return 0;
 	}
@@ -614,10 +596,6 @@ static int _cap_setuid(struct syscaller_s *sc, uid_t uid)
     if (ret == 0) {
 	if (_libcap_overrode_syscalls) {
 	    ret = sc->three(sys_setuid_variant, (long int) uid, 0, 0);
-	    if (ret < 0) {
-		errno = -ret;
-		ret = -1;
-	    }
 	} else {
 	    ret = setuid(uid);
 	}
@@ -669,10 +647,6 @@ static int _cap_setgroups(struct syscaller_s *sc,
 	if (ret == 0) {
 	    ret = sc->three(sys_setgroups_variant, (long int) ngroups,
 			    (long int) groups, 0);
-	}
-	if (ret < 0) {
-	    errno = -ret;
-	    ret = -1;
 	}
     } else {
 	if (ret == 0) {
@@ -982,10 +956,6 @@ static int _cap_chroot(struct syscaller_s *sc, const char *root)
     if (ret == 0) {
 	if (_libcap_overrode_syscalls) {
 	    ret = sc->three(SYS_chroot, (long int) root, 0, 0);
-	    if (ret < 0) {
-		errno = -ret;
-		ret = -1;
-	    }
 	} else {
 	    ret = chroot(root);
 	}
